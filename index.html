@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+    <title>Document</title>
+    <style>
+        /* Set the size of the div element that contains the map */
+           #map {
+             height: 400px;  /* The height is 400 pixels */
+             width: 100%;  /* The width is the width of the web page */
+            }
+            .blue{
+                background-color: blue
+            }
+         </style>
+</head>
+
+<body>
+    <div class="container" id="root">
+
+
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Choose city </h5>
+
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group">
+                            <li v-for="city in cities" class="list-group-item">{{city.title}}
+                                <button @click="choose(city)" type="button" class="btn btn-outline-primary float-right">Choose</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- search bar -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-8">
+                <div class="input-group mb-3">
+                    <input v-model="search" type="text" class="form-control" placeholder="Recipient's username"
+                        aria-label="Recipient's username" aria-describedby="button-addon2">
+                    <div class="input-group-append">
+                        <button @click="fetchData" class="btn btn-outline-secondary" type="button" id="button-addon2">Button</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- weather info -->
+        <div v-if="readyToShow" class="row justify-content-center align-items-center">
+            <div class="col-8">
+                <div class="row justify-content-center align-items-center mt-5">
+                    <div class="col-4">
+                        <div class="card">
+                            <img :src="svgImage" class="card-img-top" alt="...">
+                            <div class="card-body">
+                                <h5 class="card-title">{{preview[0].weather_state_name}}</h5>
+                                
+                                    <p class="card-text">wind-speed: {{preview[0].wind_speed}}</p>
+                                    <p class="card-text">wind_direction: {{preview[0].wind_direction}}</p>
+                                    <p class="card-text">air-pressure: {{preview[0].air_pressure}}</p>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        <div class="row justify-content-center">
+                            <!-- Primary -->
+                            <div class="col-5">
+                                <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                                    <div class="card-header">Lowest-Tempreture</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{preview[0].min_temp}}</h5>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Danger -->
+                            <div class="col-5">
+                                <div class="card text-white bg-danger mb-3" style="max-width: 18rem;">
+                                    <div class="card-header">Highest-Tempreture</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{preview[0].max_temp}}</h5>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Warning -->
+                        <div class="row justify-content-center">
+
+                            <div class="col-5">
+                                <div class="card text-white bg-warning mb-3" style="max-width: 18rem;">
+                                    <div class="card-header">Sun-Rise</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{preview[0].weather_state_name}}</h5>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Success -->
+                            <div class="col-5">
+                                <div class="card text-white bg-success mb-3" style="max-width: 18rem;">
+                                    <div class="card-header">Sun-sit</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{preview[0].weather_state_name}}</h5>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- news feeed -->
+        <div class="row justify-content-center mt-5">
+            <div v-for="article in articles" class="col-md-3  mx-1">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- {{urlToImage = article.urlToImage }} -->
+                        <img :src="article.urlToImage" class="card-img-top" alt="...">
+                        <h5 class="card-title">{{article.title}}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{article.publishedAt}}</h6>
+                        <p class="card-text">{{article.description}}</p>
+                        <a target="_blank" :href="article.url" class="card-link">visit</a>
+                        <a href="#" class="card-link">Another link</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- map -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="map"></div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script>
+        let vue = new Vue({
+            el: "#root",
+            data: {
+                svgImage: "",
+                lat: 33.2361663,
+                long: 44.3476541,
+                search: "",
+                cities: [],
+                preview: [],
+                articles: [],
+                specifiedCity: "",
+                ready: false,
+                urlToImage: "",
+            },
+            methods: {
+                fetchData() {
+                    axios.get("https://www.metaweather.com/api/location/search/", {
+                        // headers: { crossdomain: true },
+                        params: {
+                            query: this.search
+                        }
+                    }).then(response => {
+                        this.cities = response.data;
+                        console.log(this.cities);
+                        $('#myModal').modal('show')
+                    });
+                },
+                choose(city) {
+                    this.specifiedCity = city.title;
+                    var d = new Date();
+                    console.log(window.marker)
+                    axios.get(`https://www.metaweather.com/api/location/${city.woeid}/${d.getFullYear()}/${d.getMonth()}/${d.getDate()}/`).then(response => {
+                        this.preview = response.data;
+                        console.log(response.data);
+                        $('#myModal').modal('hide')
+                        this.getImage();
+                        this.getNews();
+                    })
+
+                },
+                getImage() {
+                    this.svgImage = `https://www.metaweather.com/static/img/weather/${this.preview[0].weather_state_abbr}.svg`;
+                },
+                getNews() {
+                    axios.get(`https://newsapi.org/v2/everything?q=${this.specifiedCity}&apiKey=512caf4ca30344888ae414ad356ad76f`).then(response => {
+                        this.articles = response.data.articles;
+                        this.urlToImage = this.articles
+                        console.log(response.data);
+
+                    })
+                }
+
+            },
+            computed: {
+                readyToShow() {
+                    if (this.preview.length == 0) {
+                        return false;
+                    }
+                    else {
+                        return true;
+                    }
+                }
+            },
+            mounted() {
+                
+            }
+        });
+    </script>
+    <script>
+        // Initialize and add the map
+        function initMap() {
+            // The location of Uluru
+            var uluru = { lat: 33.2361663, lng: 44.3476541 };
+            // The map, centered at Uluru
+            var map = new google.maps.Map(
+                document.getElementById('map'), { zoom: 4, center: uluru });
+            // The marker, positioned at Uluru
+             var marker = new google.maps.Marker({ position: uluru, map: map });
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNqSko9PJ6bwfi_iEyof7gl0MpeDhbdOA&callback=initMap">
+    </script>
+
+</body>
+
+</html>
